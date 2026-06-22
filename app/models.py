@@ -14,6 +14,7 @@ class Employee(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+
 class User(Base):
     __tablename__ = "users"
 
@@ -21,4 +22,5 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     password = Column(String, nullable=False)
+    role = Column(String, default="employee")  # ← add this line
     created_at = Column(DateTime(timezone=True), server_default=func.now())

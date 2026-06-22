@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
@@ -31,16 +31,18 @@ class EmployeeResponse(BaseModel):
     class Config:
         from_attributes = True
 
-        # User schemas
+# User schemas
 class UserCreate(BaseModel):
     name: str
     email: str
     password: str
+    role: str = "employee"
 
 class UserResponse(BaseModel):
     id: int
     name: str
     email: str
+    role: str
     created_at: datetime
 
     class Config:
