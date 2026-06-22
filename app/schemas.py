@@ -1,8 +1,6 @@
 from pydantic import BaseModel
-from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
-# What data is needed to CREATE an employee
 class EmployeeCreate(BaseModel):
     name: str
     email: str
@@ -10,7 +8,6 @@ class EmployeeCreate(BaseModel):
     position: str
     salary: float
 
-# What data is needed to UPDATE an employee
 class EmployeeUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
@@ -18,39 +15,19 @@ class EmployeeUpdate(BaseModel):
     position: Optional[str] = None
     salary: Optional[float] = None
 
-# What data we SEND BACK in response
-class EmployeeResponse(BaseModel):
+class EmployeeOut(BaseModel):
     id: int
     name: str
     email: str
     department: str
     position: str
     salary: float
-    created_at: datetime
 
     class Config:
         from_attributes = True
 
-# User schemas
-class UserCreate(BaseModel):
-    name: str
-    email: str
-    password: str
-    role: str = "employee"
-
-class UserResponse(BaseModel):
-    id: int
-    name: str
-    email: str
-    role: str
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    email: Optional[str] = None
+class EmployeeListResponse(BaseModel):
+    total: int
+    page: int
+    limit: int
+    employees: List[EmployeeOut]
