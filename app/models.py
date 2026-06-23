@@ -24,3 +24,13 @@ class User(Base):
     password = Column(String, nullable=False)
     role = Column(String, default="employee")  # ← add this line
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class Document(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, nullable=False)
+    employee_id = Column(Integer, nullable=True)
+    summary = Column(String, nullable=True)
+    uploaded_by = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
