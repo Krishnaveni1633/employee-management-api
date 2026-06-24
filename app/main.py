@@ -2,6 +2,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from app.email import send_welcome_email, send_employee_added_email, send_document_summary_email
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
@@ -20,6 +21,13 @@ app = FastAPI(
     title="Employee Management API",
     description="Full stack Employee Management System with AI Document Summarization, JWT authentication, and React frontend",
     version="1.0.0"
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 @app.exception_handler(Exception)
