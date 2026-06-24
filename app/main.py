@@ -2,6 +2,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile
+from app.email import send_welcome_email, send_employee_added_email, send_document_summary_email
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
@@ -32,11 +33,14 @@ def root():
     return {"message": "Employee Management API is running!"}
 
 @app.post("/register", response_model=schemas.UserResponse)
-def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
+async def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     existing = user_crud.get_user_by_email(db, user.email)
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-    return user_crud.create_user(db, user.name, user.email, user.password, user.role)
+    new_user = user_crud.create_user(db, user.name, user.email, user.password, user.role)
+    # Send welcome email
+    await send_welcome_email(new_user.email, new_user.name)
+    return new_user
 
 @app.post("/login", response_model=schemas.Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -51,12 +55,15 @@ def get_me(current_user=Depends(get_current_user)):
     return current_user
 
 @app.post("/employees", response_model=schemas.EmployeeOut)
-def create_employee(
+async def create_employee(
     employee: schemas.EmployeeCreate,
     db: Session = Depends(get_db),
     current_user=Depends(require_role("admin"))
 ):
-    return crud.create_employee(db=db, employee=employee)
+    new_employee = crud.create_employee(db=db, employee=employee)
+    # Send notification email
+    await send_employee_added_email(current_user.email, new_employee.name)
+    return new_employee
 
 @app.get("/employees", response_model=schemas.EmployeeListResponse)
 def get_employees(
@@ -113,6 +120,7 @@ async def upload_document(
     file_bytes = await file.read()
     text = extract_text_from_pdf(file_bytes)
     summary = summarize_with_ai(text)
+
     db_document = models.Document(
         filename=file.filename,
         employee_id=employee_id,
@@ -122,6 +130,14 @@ async def upload_document(
     db.add(db_document)
     db.commit()
     db.refresh(db_document)
+
+    # Send summary email
+    await send_document_summary_email(
+        current_user.email,
+        file.filename,
+        summary
+    )
+
     return db_document
 
 @app.get("/documents", response_model=List[schemas.DocumentResponse])
